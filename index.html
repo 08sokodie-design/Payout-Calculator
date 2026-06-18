@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payout Estimate Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --blue:#64a5ea; --navy-mid:#1A2E44; --gold:#66bcdb; --gold-light:#9cddef;
+    --gold-pale:#181610; --blue:#73C2FB; --white:#FFFFFF; --slate:#000407;
+    --slate-light:#A8B4C0; --border:#D8DCE2; --text:#1A2232;
+    --shadow:0 2px 16px rgba(13,27,42,0.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'IBM Plex Sans',sans-serif;
+    background:var(--cream);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  .card{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    width:100%;
+    max-width:440px;
+    padding:40px;
+  }
+
+  .header{margin-bottom:28px;}
+  .header-tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:10px;
+  }
+  .header h1{
+    font-size:22px;
+    font-weight:600;
+    color:var(--blue);
+    margin-bottom:6px;
+  }
+  .header p{
+    font-size:13px;
+    color:var(--slate);
+    line-height:1.55;
+  }
+
+  .form-row{margin-bottom:20px;}
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:500;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--slate);
+    margin-bottom:7px;
+  }
+  .input-wrap{position:relative;}
+  .input-prefix{
+    position:absolute;
+    left:14px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:14px;
+    color:var(--slate);
+    pointer-events:none;
+  }
+  input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--border);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:15px;
+    color:var(--text);
+    background:var(--cream);
+    outline:none;
+    transition:border-color 0.2s, background 0.2s;
+  }
+  input.has-prefix{padding-left:30px;}
+  input:focus{border-color:var(--gold);background:var(--white);}
+
+  .btn-calc{
+    width:100%;
+    padding:14px;
+    background:var(--blue);
+    color:var(--white);
+    border:none;
+    border-radius:8px;
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background 0.2s;
+    margin-top:4px;
+  }
+  .btn-calc:hover{background:var(--navy-mid);}
+
+  .error-msg{
+    background:#FDECEA;
+    border:1px solid #F5C6C2;
+    color:#C0392B;
+    font-size:13px;
+    padding:10px 14px;
+    border-radius:6px;
+    margin-bottom:18px;
+    display:none;
+  }
+
+  .results{
+    margin-top:28px;
+    border-top:1px solid var(--border);
+    padding-top:24px;
+    display:none;
+  }
+  .results.show{display:block;}
+
+  .result-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 0;
+  }
+  .result-row + .result-row{border-top:1px solid var(--border);}
+  .result-label{font-size:13px;color:var(--slate);}
+  .result-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;
+    font-weight:500;
+    color:var(--blue);
+  }
+
+  .result-final{
+    background:var(--blue);
+    border-radius:10px;
+    padding:20px;
+    margin-top:16px;
+    text-align:center;
+  }
+  .result-final-label{
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--gold-light);
+    margin-bottom:8px;
+  }
+  .result-final-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:30px;
+    font-weight:300;
+    color:var(--white);
+  }
+
+  .formula-note{
+    font-size:11.5px;
+    color:var(--slate-light);
+    line-height:1.6;
+    margin-top:18px;
+    padding-top:14px;
+    border-top:1px solid var(--border);
+  }
+  .formula-note code{
+    font-family:'IBM Plex Mono',monospace;
+    background:var(--cream);
+    padding:1px 5px;
+    border-radius:4px;
+    color:var(--blue);
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="header-tag">Estimate Calculator</div>
+    <h1>Estimated Payout</h1>
+    <p>Enter your years of service and monthly salary to estimate your payout.</p>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <div class="form-row">
+    <label>Years Worked</label>
+    <input type="number" id="years" min="0" step="1" placeholder="e.g 5">
+  </div>
+
+  <div class="form-row">
+    <label>Monthly Salary</label>
+    <div class="input-wrap">
+      <span class="input-prefix">P</span>
+      <input type="number" id="salary" class="has-prefix" min="0" step="100" placeholder="e.g 5000">
+    </div>
+  </div>
+
+  <button class="btn-calc" onclick="calculate()">Calculate Estimated Payout</button>
+
+  <div class="results" id="results">
+    <div class="result-row">
+      <span class="result-label">Daily Rate (Salary ÷ 22)</span>
+      <span class="result-value" id="daily-rate">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Daily Rate × 45</span>
+      <span class="result-value" id="rate-x45">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Years Worked</span>
+      <span class="result-value" id="years-display">—</span>
+    </div>
+
+    <div class="result-final">
+      <div class="result-final-label">Estimated Amount</div>
+      <div class="result-final-value" id="final-amount">P 0.00</div>
+    </div>
+
+    <div class="formula-note">
+      Formula: <code>Daily Rate × Years Worked × 45</code>
+    </div>
+  </div>
+</div>
+
+<script>
+function formatMoney(num) {
+  return 'P ' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function calculate() {
+  const yearsInput = document.getElementById('years').value;
+  const salaryInput = document.getElementById('salary').value;
+  const errEl = document.getElementById('error-msg');
+  const resultsEl = document.getElementById('results');
+
+  errEl.style.display = 'none';
+
+  const years = parseFloat(yearsInput);
+  const salary = parseFloat(salaryInput);
+
+  if (isNaN(years) || isNaN(salary) || years < 0 || salary < 0 || yearsInput === '' || salaryInput === '') {
+    errEl.textContent = 'Please enter valid, positive for both years worked and salary.';
+    errEl.style.display = 'block';
+    resultsEl.classList.remove('show');
+    return;
+  }
+
+  const dailyRate = salary / 22;
+  const rateX45 = dailyRate * 45;
+  const finalAmount = rateX45 * years;
+
+  document.getElementById('daily-rate').textContent = formatMoney(dailyRate);
+  document.getElementById('rate-x45').textContent = formatMoney(rateX45);
+  document.getElementById('years-display').textContent = years.toLocaleString();
+  document.getElementById('final-amount').textContent = formatMoney(finalAmount);
+
+  resultsEl.classList.add('show');
+}
+
+document.getElementById('years').addEventListener('keypress', e => { if (e.key === 'Enter') calculate(); });
+document.getElementById('salary').addEventListener('keypress', e => { if (e.key === 'Enter') calculate(); });
+</script>
+</body>
+</html>
