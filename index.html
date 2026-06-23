@@ -293,6 +293,13 @@ function calculate() {
     return;
   }
 
+   if(years > 20){
+   errEl.textContent = 'The number of years should be equal to or less than 20'
+   errEl.style.display = 'block';
+   resultsEl.classList.remove('show');
+   return;
+  }
+
   const dailyRate = salary / 22;
   const rateX45 = dailyRate * 45;
   const finalAmount = rateX45 * years;
